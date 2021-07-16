@@ -102,6 +102,7 @@ public class PrintingService {
 
         job.setPageable(new PDFPageable(document));
         job.print();
+        document.close();
     }
 
 

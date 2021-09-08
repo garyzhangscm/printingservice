@@ -25,8 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.print.PrintService;
-import javax.print.PrintServiceLookup;
+import javax.print.*;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.io.File;
@@ -41,25 +40,27 @@ public class PrintingService {
     @Value("${fileupload.temp-file.directory:/upload/tmp/}")
     String destinationFolder;
 
-    public void printingPDFFile(File file) throws IOException, PrinterException {
+    public void printingPDFFile(File file, int copies) throws IOException, PrinterException {
         System.out.println(LocalDateTime.now() + ": Will print from default printer");
-        printingPDFFile(file, PrinterJob.getPrinterJob());
+        printingPDFFile(file, PrinterJob.getPrinterJob(), copies);
     }
 
-    public void printingPDFFile(File file, PrinterJob job) throws IOException, PrinterException {
+    public void printingPDFFile(File file, PrinterJob job, int copies) throws IOException, PrinterException {
 
         PDDocument document  = PDDocument.load(file);
         System.out.println(LocalDateTime.now() + ": file name printed");
 
         System.out.println(LocalDateTime.now() + "： got default printer");
         job.setPageable(new PDFPageable(document));
+        System.out.println(LocalDateTime.now() + "： print " + copies + " copies");
+        job.setCopies(copies);
         job.print();
 
         // close the document after printing
         document.close();
     }
 
-    public void printingPDFFile(File file, String printerName) throws IOException, PrinterException {
+    public void printingPDFFile(File file, String printerName, int copies) throws IOException, PrinterException {
 
         PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, null);
 
@@ -71,7 +72,7 @@ public class PrintingService {
             if(printer.getName().equalsIgnoreCase(printerName)) {
 
                 System.out.println(LocalDateTime.now()+ ": Found the printer!!! Will print from " + printerName);
-                printingPDFFile(file, printer);
+                printingPDFFile(file, printer, copies);
                 return;
 
             }
@@ -94,13 +95,15 @@ public class PrintingService {
         return printers;
 
     }
-    public void printingPDFFile(File file, PrintService printer)
+    public void printingPDFFile(File file, PrintService printer, int copies)
             throws IOException, PrinterException {
         PrinterJob job = PrinterJob.getPrinterJob();
         job.setPrintService(printer);
         PDDocument document  = PDDocument.load(file);
 
         job.setPageable(new PDFPageable(document));
+        System.out.println(LocalDateTime.now() + "： print " + copies + " copies");
+        job.setCopies(copies);
         job.print();
         document.close();
     }
@@ -113,12 +116,52 @@ public class PrintingService {
         System.out.println(LocalDateTime.now()+ ": File loaded");
         if (Strings.isBlank(printer)) {
             System.out.println(LocalDateTime.now() + ": Will print from the default printer");
-            printingPDFFile(file);
+            printingPDFFile(file, 1);
         }
         else {
             System.out.println(LocalDateTime.now() + ": Will print from the printer: " + printer );
-            printingPDFFile(file, printer);
+            printingPDFFile(file, printer, 1);
         }
 
     }
+
+    public void printZebraLabel(String zplCommand, int copies) throws PrintException {
+        System.out.println(LocalDateTime.now() + ": Will print from default printer");
+        printZebraLabel(zplCommand, PrintServiceLookup.lookupDefaultPrintService(), copies);
+    }
+
+
+
+    public void printZebraLabel(String zplCommand, String printerName, int copies) throws IOException, PrinterException, PrintException {
+
+        PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, null);
+
+        for (PrintService printer : printServices) {
+            System.out.println(LocalDateTime.now()+
+                    ": compare existing printer " + printer.getName() +
+                    " with required printer " + printerName +
+                    ": match? " + printer.getName().equalsIgnoreCase(printerName));
+            if(printer.getName().equalsIgnoreCase(printerName)) {
+
+                System.out.println(LocalDateTime.now()+ ": Found the printer!!! Will print from " + printerName);
+                printZebraLabel(zplCommand, printer, copies);
+                return;
+
+            }
+        }
+
+
+        System.out.println(LocalDateTime.now() + ": Cannot find any printer with name " + printerName);
+
+    }
+
+    public void printZebraLabel(String zplCommand, PrintService printService, int copies)
+            throws PrintException {
+
+        DocPrintJob job = printService.createPrintJob();
+        DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
+        Doc doc = new SimpleDoc(zplCommand.getBytes(), flavor, null);
+        job.print(doc, null);
+    }
+
 }

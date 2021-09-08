@@ -41,6 +41,7 @@ import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.io.*;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -93,16 +94,17 @@ public class PrintingController {
     @RequestMapping(value="/printing/pdf", method = RequestMethod.POST)
     @RestResource
     public String printingPDF(@RequestParam("file") MultipartFile file,
-                              @RequestParam(name = "printer", required = false, defaultValue = "") String printer) throws IOException, PrinterException {
-        System.out.println(LocalDateTime.now() + "Start to print uploaded pdf file from printer " + printer);
+                              @RequestParam(name = "printer", required = false, defaultValue = "") String printer,
+                              @RequestParam(name = "copies", required = false, defaultValue = "1") int copies) throws IOException, PrinterException {
+        System.out.println(LocalDateTime.now() + "Start to print uploaded pdf file from printer " + printer + ", copies: " + copies);
 
         File localFile = fileService.saveFile(file);
         if (Strings.isBlank(printer)) {
-            printingService.printingPDFFile(localFile);
+            printingService.printingPDFFile(localFile, copies);
 
         }
         else  {
-            printingService.printingPDFFile(localFile, printer);
+            printingService.printingPDFFile(localFile, printer, copies);
         }
 
 
@@ -110,6 +112,29 @@ public class PrintingController {
     }
 
 
+    @RequestMapping(value="/printing/label", method = RequestMethod.POST)
+    @RestResource
+    public String printLabel(@RequestParam("file") MultipartFile file,
+                              @RequestParam(name = "printer", required = false, defaultValue = "") String printer,
+                              @RequestParam(name = "copies", required = false, defaultValue = "1") int copies) throws IOException, PrinterException, PrintException {
+        System.out.println(LocalDateTime.now() + "Start to print uploaded pdf file from printer " + printer + ", copies: " + copies);
+
+        String labelContent = new String(file.getBytes(), StandardCharsets.UTF_8);
+
+        System.out.println("Start to print label with content");
+        System.out.println(labelContent);
+
+        if (Strings.isBlank(printer)) {
+            printingService.printZebraLabel(labelContent, copies);
+
+        }
+        else  {
+            printingService.printZebraLabel(labelContent, printer, copies);
+        }
+
+
+        return "print success";
+    }
 
 
 }

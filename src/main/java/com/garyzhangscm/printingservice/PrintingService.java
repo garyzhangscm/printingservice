@@ -158,10 +158,13 @@ public class PrintingService {
     public void printZebraLabel(String zplCommand, PrintService printService, int copies)
             throws PrintException {
 
-        DocPrintJob job = printService.createPrintJob();
-        DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
-        Doc doc = new SimpleDoc(zplCommand.getBytes(), flavor, null);
-        job.print(doc, null);
+        for(int i = 0; i < copies; i++) {
+
+            DocPrintJob job = printService.createPrintJob();
+            DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
+            Doc doc = new SimpleDoc(zplCommand.getBytes(), flavor, null);
+            job.print(doc, null);
+        }
     }
 
 }

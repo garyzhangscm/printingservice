@@ -117,7 +117,7 @@ public class PrintingController {
     public String printLabel(@RequestParam("file") MultipartFile file,
                               @RequestParam(name = "printer", required = false, defaultValue = "") String printer,
                               @RequestParam(name = "copies", required = false, defaultValue = "1") int copies) throws IOException, PrinterException, PrintException {
-        System.out.println(LocalDateTime.now() + "Start to print uploaded pdf file from printer " + printer + ", copies: " + copies);
+        System.out.println(LocalDateTime.now() + "Start to print uploaded LBL file from printer " + printer + ", copies: " + copies);
 
         String labelContent = new String(file.getBytes(), StandardCharsets.UTF_8);
 
